@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>XYZ Solutions | Intelligent Movement Analytics</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind config: brand colors & animations -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'jet-black': '#0A0A0A',
+            'electric-blue': '#00FFFF',
+            'neon-green': '#39FF14',
+            'dark-gray': '#1A1A1A'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          keyframes: {
+            pulseGreen: {
+              '0%, 100%': { 'box-shadow': '0 0 5px #39FF14' },
+              '50%': { 'box-shadow': '0 0 15px #39FF14, 0 0 30px #39FF14' }
+            },
+            pulseBlue: {
+              '0%, 100%': { 'box-shadow': '0 0 5px #00FFFF' },
+              '50%': { 'box-shadow': '0 0 15px #00FFFF, 0 0 30px #00FFFF' }
+            },
+            scanLine: {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(100%)' }
+            }
+          },
+          animation: {
+            'pulse-green': 'pulseGreen 2s infinite ease-in-out',
+            'pulse-blue': 'pulseBlue 2s infinite ease-in-out',
+            'scan-line': 'scanLine 4s infinite linear'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Base styles */
+    :root{ --bg:#0A0A0A }
+    body {
+      background-color: var(--bg);
+      color: white;
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      scroll-behavior: smooth;
+    }
+
+    /* Hero grid effect */
+    #hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, #1A1A1A 1px, transparent 1px),
+        linear-gradient(to bottom, #1A1A1A 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.12;
+      z-index: 0;
+      transform: perspective(1000px) rotateX(45deg);
+      transform-origin: top;
+      pointer-events: none;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0A0A0A; }
+    ::-webkit-scrollbar-thumb { background: #1A1A1A; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #39FF14; }
+
+    /* scan line */
+    .scan-line-container { position:absolute; inset:0; pointer-events:none; z-index:1; }
+    .scan-line { position:absolute; top: -10%; left:0; width:100%; height:6px; background: linear-gradient(90deg, transparent, #00FFFF, transparent); opacity:0.45; animation: scan-line 4s linear infinite; }
+
+    /* small utility */
+    .glass { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; }
+    .icon-circle { border-radius: 9999px; border: 2px solid #00FFFF; box-shadow: 0 0 10px rgba(0,255,255,0.25); }
+
+    /* animation helper for fade-in */
+    .fade-in { animation: fadeIn .6s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  </style>
+</head>
+<body class="selection:bg-neon-green selection:text-jet-black">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-jet-black/90 backdrop-blur-sm shadow-xl shadow-jet-black/50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-4">
+        <div class="text-2xl font-bold tracking-widest text-electric-blue">
+          XYZ<span class="text-neon-green">SOLUTIONS</span>
+        </div>
+        <div class="text-sm text-gray-400 hidden sm:block">Secure • Accurate • Connected</div>
+      </div>
+
+      <nav class="hidden md:flex items-center space-x-6" aria-label="Main navigation">
+        <a href="#services" class="text-sm font-medium hover:text-neon-green transition">Services</a>
+        <a href="#video" class="text-sm font-medium hover:text-neon-green transition">Promo</a>
+        <a href="#posters" class="text-sm font-medium hover:text-neon-green transition">Pillars</a>
+        <a href="#contact" class="text-sm font-medium hover:text-neon-green transition">Contact</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="#contact" class="hidden sm:inline-block px-4 py-2 bg-neon-green text-jet-black text-sm font-bold rounded-lg shadow-lg hover:bg-electric-blue transition">
+          REQUEST A DEMO
+        </a>
+
+        <!-- Mobile menu button -->
+        <button id="mobileBtn" class="md:hidden p-2 rounded-lg bg-gray-900/30" aria-label="Open menu">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-gray-200"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile nav (hidden by default) -->
+    <div id="mobileNav" class="hidden md:hidden bg-jet-black/95 border-t border-white/5">
+      <div class="px-4 py-4 flex flex-col gap-3">
+        <a href="#services" class="text-white/90">Services</a>
+        <a href="#video" class="text-white/90">Promo</a>
+        <a href="#posters" class="text-white/90">Pillars</a>
+        <a href="#contact" class="text-white/90">Contact</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section id="hero" class="relative overflow-hidden pt-28 pb-20 md:pt-36 md:pb-32 min-h-[72vh] flex items-center">
+      <div id="hero-grid" aria-hidden="true"></div>
+      <div class="scan-line-container" aria-hidden="true"><div class="scan-line"></div></div>
+
+      <div class="container mx-auto px-4 relative z-10 text-center">
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 fade-in">
+          <span class="text-electric-blue block">INTELLIGENT MOVEMENT</span>
+          <span class="text-neon-green block">STARTS NOW.</span>
+        </h1>
+
+        <p class="text-lg sm:text-xl lg:text-2xl text-gray-400 max-w-3xl mx-auto mb-10">
+          Secure, accurate, and technology-driven GPS solutions for unparalleled fleet monitoring and real-time logistics data.
+        </p>
+
+        <div class="flex items-center justify-center gap-4">
+          <a href="#contact" class="inline-block px-8 py-3 bg-neon-green text-jet-black text-lg font-bold rounded-xl uppercase shadow-2xl hover:shadow-neon-green transition transform hover:scale-105 animate-pulse-green">
+            REQUEST A DEMO
+          </a>
+          <a href="#posters" class="inline-block px-6 py-3 border border-white/10 text-sm rounded-lg hover:bg-white/5 transition">Explore Pillars</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROBLEM / PAIN -->
+    <section class="py-20 md:py-28 bg-dark-gray">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-12 text-electric-blue">WHERE IS YOUR EFFICIENCY LOST?</h2>
+        <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div class="p-6 bg-jet-black rounded-xl border border-red-700/40 shadow-lg hover:shadow-red-700/60 transition">
+            <div class="text-5xl mb-4 text-red-500">!</div>
+            <h3 class="text-xl font-semibold mb-2">THEFT VULNERABILITY</h3>
+            <p class="text-gray-400">Reactive, slow response times lead to costly asset loss and recovery efforts.</p>
+          </div>
+
+          <div class="p-6 bg-jet-black rounded-xl border border-red-700/40 shadow-lg hover:shadow-red-700/60 transition">
+            <div class="text-5xl mb-4 text-red-500">!</div>
+            <h3 class="text-xl font-semibold mb-2">FUEL INEFFICIENCY</h3>
+            <p class="text-gray-400">Unoptimized routes and unchecked usage deplete budgets faster than necessary.</p>
+          </div>
+
+          <div class="p-6 bg-jet-black rounded-xl border border-red-700/40 shadow-lg hover:shadow-red-700/60 transition">
+            <div class="text-5xl mb-4 text-red-500">!</div>
+            <h3 class="text-xl font-semibold mb-2">DRIVER RISK</h3>
+            <p class="text-gray-400">Lack of behavior monitoring increases accident probability and insurance liability.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services" class="py-20 md:py-28">
+      <div class="container mx-auto px-4">
+        <h2 class="text-4xl sm:text-5xl font-extrabold text-center mb-6">
+          <span class="text-neon-green">THE POWER</span> <span class="text-electric-blue">TO CONTROL</span>
+        </h2>
+        <p class="text-xl text-gray-400 text-center max-w-3xl mx-auto mb-14">
+          XYZ Solutions delivers secure, accurate, and comprehensive tracking tools built on a rock-solid foundation.
+        </p>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <!-- Card helper -->
+          <div class="p-8 rounded-xl bg-dark-gray/50 border border-electric-blue/20 shadow-2xl hover:bg-dark-gray transition transform hover:-translate-y-1">
+            <div class="icon-circle w-16 h-16 flex items-center justify-center mb-4 text-electric-blue text-2xl">
+              <!-- GPS icon -->
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-electric-blue">GPS Vehicle Tracking</h3>
+            <p class="text-gray-400">Pinpoint accuracy and continuous monitoring for every asset, anywhere, anytime.</p>
+          </div>
+
+          <div class="p-8 rounded-xl bg-dark-gray/50 border border-neon-green/20 shadow-2xl hover:bg-dark-gray transition transform hover:-translate-y-1">
+            <div class="icon-circle w-16 h-16 flex items-center justify-center mb-4 text-neon-green text-2xl" style="border-color:#39FF14; box-shadow:0 0 10px rgba(57,255,20,0.2)">
+              <!-- Dashboard icon -->
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-neon-green">Live Route Monitoring</h3>
+            <p class="text-gray-400">A centralized, high-fidelity dashboard providing actionable, real-time insights.</p>
+          </div>
+
+          <div class="p-8 rounded-xl bg-dark-gray/50 border border-electric-blue/20 shadow-2xl hover:bg-dark-gray transition transform hover:-translate-y-1">
+            <div class="icon-circle w-16 h-16 flex items-center justify-center mb-4 text-electric-blue text-2xl">
+              <!-- Lock icon -->
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-electric-blue">Anti-Theft Alerts</h3>
+            <p class="text-gray-400">Instant notification system and remote immobilization features for ultimate security.</p>
+          </div>
+
+          <div class="p-8 rounded-xl bg-dark-gray/50 border border-neon-green/20 shadow-2xl hover:bg-dark-gray transition transform hover:-translate-y-1">
+            <div class="icon-circle w-16 h-16 flex items-center justify-center mb-4 text-neon-green text-2xl" style="border-color:#39FF14; box-shadow:0 0 10px rgba(57,255,20,0.18)">
+              <!-- Chart icon -->
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-neon-green">Fleet Analytics</h3>
+            <p class="text-gray-400">Comprehensive reporting on fleet utilization, maintenance schedules, and efficiency.</p>
+          </div>
+
+          <div class="p-8 rounded-xl bg-dark-gray/50 border border-electric-blue/20 shadow-2xl hover:bg-dark-gray transition transform hover:-translate-y-1">
+            <div class="icon-circle w-16 h-16 flex items-center justify-center mb-4 text-electric-blue text-2xl">
+              <!-- Safety icon -->
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-electric-blue">Driver Safety Monitoring</h3>
+            <p class="text-gray-400">Score drivers based on harsh braking, acceleration and speeding to improve safety.</p>
+          </div>
+
+          <div class="p-8 rounded-xl bg-dark-gray/50 border border-neon-green/20 shadow-2xl hover:bg-dark-gray transition transform hover:-translate-y-1">
+            <div class="icon-circle w-16 h-16 flex items-center justify-center mb-4 text-neon-green text-2xl" style="border-color:#39FF14; box-shadow:0 0 10px rgba(57,255,20,0.18)">
+              <!-- Fuel icon -->
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h4m-2 0v-4"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-3 text-neon-green">Fuel & Mileage Tracking</h3>
+            <p class="text-gray-400">Eliminate waste with precise data on consumption, enabling smarter logistics planning.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIDEO -->
+    <section id="video" class="py-20 md:py-28 bg-jet-black border-t border-b border-electric-blue/10">
+      <div class="container mx-auto px-4 text-center max-w-6xl">
+        <h2 class="text-4xl sm:text-5xl font-extrabold mb-4">
+          <span class="text-electric-blue">SEE THE</span> <span class="text-neon-green">SOLUTION IN ACTION</span>
+        </h2>
+        <p class="text-lg text-gray-400 max-w-3xl mx-auto mb-12">
+          Our 60-second promo highlights the journey: from costly chaos to controlled clarity, powered by XYZ Solutions.
+        </p>
+
+        <div class="video-wrapper rounded-2xl overflow-hidden border-4 border-electric-blue/30 shadow-2xl shadow-electric-blue/20">
+          <!-- Replace with actual iframe when available -->
+          <div class="w-full h-full bg-dark-gray flex items-center justify-center p-10">
+            <div class="text-center">
+              <h3 class="text-3xl font-bold text-electric-blue mb-4">PROMOTIONAL VIDEO EMBED</h3>
+              <p class="text-neon-green text-lg">30–60 Seconds: Problem → Solution → Benefits</p>
+              <div class="mt-6 w-16 h-16 mx-auto bg-neon-green rounded-full flex items-center justify-center cursor-pointer transform hover:scale-110 transition shadow-xl shadow-neon-green/50">
+                <svg class="w-6 h-6 text-jet-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POSTERS / PILLARS -->
+    <section id="posters" class="py-20 md:py-28">
+      <div class="container mx-auto px-4">
+        <h2 class="text-4xl sm:text-5xl font-extrabold text-center mb-4">
+          <span class="text-neon-green">OUR</span> <span class="text-electric-blue">PILLARS</span>
+        </h2>
+        <p class="text-xl text-gray-400 text-center max-w-3xl mx-auto mb-12">
+          The core values that define every movement we track and every solution we deliver.
+        </p>
+
+        <div class="space-y-16">
+          <!-- Poster 1: Secure -->
+          <div class="rounded-2xl overflow-hidden p-10 sm:p-16 bg-dark-gray/50 border border-electric-blue/20 shadow-xl">
+            <div class="md:flex md:items-center md:gap-10">
+              <div class="md:w-1/3 text-center md:text-left mb-6 md:mb-0">
+                <div class="text-3xl font-extrabold text-electric-blue mb-2">SECURE</div>
+                <p class="text-gray-400 max-w-md">
+                  Real-time anti-theft alerts, remote immobilization and tamper detection—designed to stop theft before it escalates.
+                </p>
+                <div class="mt-6">
+                  <a href="#contact" class="inline-block px-6 py-2 bg-neon-green text-jet-black rounded-lg font-bold hover:bg-electric-blue transition">Request Demo</a>
+                </div>
+              </div>
+              <div class="md:flex-1">
+                <!-- Poster graphic (SVG) -->
+                <div class="w-full h-64 md:h-40 bg-gradient-to-r from-[#001F26] to-[#002A2E] rounded-lg flex items-center justify-center border border-electric-blue/10">
+                  <svg viewBox="0 0 300 200" class="w-2/3 h-2/3" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Secure poster">
+                    <rect width="100%" height="100%" rx="12" fill="transparent"></rect>
+                    <g fill="none" stroke="#00FFFF" stroke-width="1.6">
+                      <rect x="14" y="24" width="272" height="152" rx="8" stroke-opacity="0.18"></rect>
+                      <path d="M60 120 L110 70 L160 120" stroke="#39FF14" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </g>
+                    <text x="150" y="38" fill="#9fb0bf" font-size="12" text-anchor="middle">SECURE</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poster 2: Efficient -->
+          <div class="rounded-2xl overflow-hidden p-10 sm:p-16 bg-dark-gray/50 border border-neon-green/20 shadow-xl">
+            <div class="md:flex md:items-center md:gap-10">
+              <div class="md:w-1/3 text-center md:text-left mb-6 md:mb-0">
+                <div class="text-3xl font-extrabold text-neon-green mb-2">EFFICIENT</div>
+                <p class="text-gray-400 max-w-md">
+                  Optimize fuel, routes and schedules using AI-driven analytics to cut operational costs and boost uptime.
+                </p>
+                <div class="mt-6">
+                  <a href="#contact" class="inline-block px-6 py-2 bg-electric-blue text-jet-black rounded-lg font-bold hover:bg-neon-green transition">Get Insights</a>
+                </div>
+              </div>
+              <div class="md:flex-1">
+                <div class="w-full h-64 md:h-40 bg-gradient-to-r from-[#002018] to-[#003036] rounded-lg flex items-center justify-center border border-neon-green/10">
+                  <svg viewBox="0 0 300 200" class="w-2/3 h-2/3" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Efficient poster">
+                    <rect width="100%" height="100%" rx="12" fill="transparent"></rect>
+                    <g fill="#39FF14" opacity="0.9">
+                      <circle cx="80" cy="110" r="8"></circle>
+                      <circle cx="140" cy="80" r="8"></circle>
+                      <circle cx="200" cy="120" r="8"></circle>
+                    </g>
+                    <text x="150" y="38" fill="#9fb0bf" font-size="12" text-anchor="middle">EFFICIENT</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poster 3: Responsible -->
+          <div class="rounded-2xl overflow-hidden p-10 sm:p-16 bg-dark-gray/50 border border-electric-blue/10 shadow-xl">
+            <div class="md:flex md:items-center md:gap-10">
+              <div class="md:w-1/3 text-center md:text-left mb-6 md:mb-0">
+                <div class="text-3xl font-extrabold text-electric-blue mb-2">RESPONSIBLE</div>
+                <p class="text-gray-400 max-w-md">
+                  Driver safety monitoring and compliance tools that reduce risk, improve behavior, and lower insurance costs.
+                </p>
+                <div class="mt-6">
+                  <a href="#contact" class="inline-block px-6 py-2 bg-neon-green text-jet-black rounded-lg font-bold hover:bg-electric-blue transition">Learn More</a>
+                </div>
+              </div>
+              <div class="md:flex-1">
+                <div class="w-full h-64 md:h-40 bg-gradient-to-r from-[#00182A] to-[#002235] rounded-lg flex items-center justify-center border border-electric-blue/6">
+                  <svg viewBox="0 0 300 200" class="w-2/3 h-2/3" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Responsible poster">
+                    <rect width="100%" height="100%" rx="12" fill="transparent"></rect>
+                    <g fill="#00FFFF" opacity="0.9">
+                      <rect x="60" y="80" width="40" height="40" rx="6"></rect>
+                      <rect x="120" y="60" width="40" height="60" rx="6"></rect>
+                      <rect x="180" y="90" width="40" height="30" rx="6"></rect>
+                    </g>
+                    <text x="150" y="38" fill="#9fb0bf" font-size="12" text-anchor="middle">RESPONSIBLE</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT / FOOTER -->
+    <section id="contact" class="py-16 md:py-20 bg-jet-black border-t border-white/5">
+      <div class="container mx-auto px-4">
+        <div class="md:flex md:items-center md:justify-between gap-8">
+          <div class="md:w-2/3">
+            <h3 class="text-2xl font-extrabold text-electric-blue mb-2">Ready to secure and optimize your fleet?</h3>
+            <p class="text-gray-400 max-w-2xl">Request a demo or contact our sales team for a tailored solution. We’ll show you the path from data to decisive action.</p>
+          </div>
+          <div class="mt-6 md:mt-0">
+            <a href="mailto:stc_iitp@iitp.ac.in" class="inline-block px-6 py-3 bg-neon-green text-jet-black rounded-lg font-bold hover:bg-electric-blue transition">Contact Sales</a>
+          </div>
+        </div>
+
+        <footer class="mt-12 pt-8 border-t border-white/5 text-sm text-gray-400 flex flex-col md:flex-row md:justify-between gap-4">
+          <div>© <span id="year"></span> XYZ Solutions — Intelligent Movement Analytics</div>
+          <div class="flex items-center gap-6">
+            <div>Register: <a href="https://stciitphybrid.in/xenith" class="text-electric-blue hover:underline">stciitphybrid.in/xenith</a></div>
+            <div>Email: <a href="mailto:stc_iitp@iitp.ac.in" class="text-electric-blue hover:underline">stc_iitp@iitp.ac.in</a></div>
+          </div>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <!-- small JS for mobile menu + helpers -->
+  <script>
+    // set year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // mobile menu toggle
+    const mobileBtn = document.getElementById('mobileBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    if (mobileBtn && mobileNav) {
+      mobileBtn.addEventListener('click', () => {
+        mobileNav.classList.toggle('hidden');
+        mobileBtn.setAttribute('aria-expanded', !mobileNav.classList.contains('hidden'));
+      });
+    }
+
+    // smooth scroll for internal anchors (for older browsers)
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', function(e){
+        const target = document.querySelector(this.getAttribute('href'));
+        if(target){
+          e.preventDefault();
+          target.scrollIntoView({behavior: 'smooth', block: 'start'});
+          // close mobile nav on selection
+          if(!mobileNav.classList.contains('hidden')) mobileNav.classList.add('hidden');
+        }
+      });
+    });
+
+    // keyboard: allow Enter on hero CTA to focus contact
+    document.querySelectorAll('.animate-pulse-green').forEach(el=>{
+      el.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter') document.getElementById('contact').scrollIntoView({behavior:'smooth'});
+      });
+    });
+  </script>
+</body>
+</html>
